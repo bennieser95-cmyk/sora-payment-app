@@ -54,7 +54,7 @@ export function AuthScreen({ onLogin }: AuthScreenProps) {
               <div className="absolute inset-12 rounded-full border-2 border-lavender/20"></div>
               <div className="absolute inset-16 rounded-full border border-peach/10"></div>
               <h1 className="text-6xl font-display font-bold text-primary-foreground tracking-tight">
-                SORA
+                OVIA
               </h1>
             </div>
             <Sparkle className="absolute top-4 right-8 text-mint" size={32} weight="fill" />
@@ -90,7 +90,7 @@ export function AuthScreen({ onLogin }: AuthScreenProps) {
         className="max-w-md w-full"
       >
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-display font-bold mb-2">SORA</h1>
+          <h1 className="text-5xl font-display font-bold mb-2">OVIA</h1>
           <p className="text-muted-foreground">
             {mode === 'login' ? 'Welcome back' : 'Create your account'}
           </p>

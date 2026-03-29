@@ -1,7 +1,9 @@
 import { Session, User, AuthData } from './types'
 
-const USERS_KEY = 'sora_users'
-const SESSION_KEY = 'sora_session'
+const USERS_KEY = 'ovia_users'
+const SESSION_KEY = 'ovia_session'
+const LEGACY_USERS_KEY = 'sora_users'
+const LEGACY_SESSION_KEY = 'sora_session'
 
 type KvClient = {
   get: <T>(key: string) => Promise<T | undefined>
@@ -88,10 +90,41 @@ function getKv(): KvClient {
   return localStorageKv
 }
 
+async function getUsersWithLegacyFallback(kv: KvClient): Promise<User[]> {
+  const users = await kv.get<User[]>(USERS_KEY)
+  if (users && users.length > 0) {
+    return users
+  }
+
+  const legacyUsers = await kv.get<User[]>(LEGACY_USERS_KEY)
+  if (!legacyUsers || legacyUsers.length === 0) {
+    return []
+  }
+
+  await kv.set(USERS_KEY, legacyUsers)
+  return legacyUsers
+}
+
+async function getSessionWithLegacyFallback(kv: KvClient): Promise<Session | null> {
+  const session = await kv.get<Session>(SESSION_KEY)
+  if (session) {
+    return session
+  }
+
+  const legacySession = await kv.get<Session>(LEGACY_SESSION_KEY)
+  if (!legacySession) {
+    return null
+  }
+
+  await kv.set(SESSION_KEY, legacySession)
+  await kv.delete(LEGACY_SESSION_KEY)
+  return legacySession
+}
+
 export const authService = {
   async register(data: AuthData & { name: string }): Promise<User> {
     const kv = getKv()
-    const users = await kv.get<User[]>(USERS_KEY) || []
+    const users = await getUsersWithLegacyFallback(kv)
     
     const existingUser = users.find((u: User) => u.email === data.email)
     if (existingUser) {
@@ -114,7 +147,7 @@ export const authService = {
 
   async login(data: AuthData): Promise<Session> {
     const kv = getKv()
-    const users = await kv.get<User[]>(USERS_KEY) || []
+    const users = await getUsersWithLegacyFallback(kv)
     const user = users.find((u: User) => u.email === data.email)
 
     if (!user) {
@@ -141,12 +174,12 @@ export const authService = {
   async logout(): Promise<void> {
     const kv = getKv()
     await kv.delete(SESSION_KEY)
+    await kv.delete(LEGACY_SESSION_KEY)
   },
 
   async getSession(): Promise<Session | null> {
     const kv = getKv()
-    const session = await kv.get<Session>(SESSION_KEY)
-    return session || null
+    return getSessionWithLegacyFallback(kv)
   },
 
   async getCurrentUser(): Promise<User | null> {
@@ -156,7 +189,7 @@ export const authService = {
     }
 
     const kv = getKv()
-    const users = await kv.get<User[]>(USERS_KEY) || []
+    const users = await getUsersWithLegacyFallback(kv)
     return users.find((u: User) => u.id === session.userId) || null
   }
 }

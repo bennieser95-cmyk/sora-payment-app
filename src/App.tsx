@@ -37,7 +37,7 @@ function App() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-5xl font-display font-bold mb-2">SORA</h1>
+          <h1 className="text-5xl font-display font-bold mb-2">OVIA</h1>
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>

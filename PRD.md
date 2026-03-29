@@ -1,6 +1,6 @@
 # Planning Guide
 
-Sora is a modern financial management application that empowers users to track income, manage expenses, link payment cards, and visualize their financial health through an intuitive, visually striking interface.
+Ovia is a modern financial management application that empowers users to track income, manage expenses, link payment cards, and visualize their financial health through an intuitive, visually striking interface.
 
 **Experience Qualities**:
 1. **Confident** - Bold visual design with clear financial data presentation that instills trust and control
