@@ -15,6 +15,7 @@ export interface Card {
   expiryYear: string
   balance: number
   cardholderName: string
+  isPrimary?: boolean
 }
 
 export interface Transaction {

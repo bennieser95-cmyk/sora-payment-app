@@ -23,12 +23,13 @@ import { motion } from 'framer-motion'
 import { AddCardDialog } from './AddCardDialog'
 import { IncomeHistory } from './IncomeHistory'
 import { PaymentsHistory } from './PaymentsHistory'
+import { CardManagement } from './CardManagement'
 
 interface DashboardProps {
   onLogout: () => void
 }
 
-type View = 'home' | 'income' | 'payments' | 'profile'
+type View = 'home' | 'income' | 'payments' | 'profile' | 'cards'
 
 export function Dashboard({ onLogout }: DashboardProps) {
   const [view, setView] = useState<View>('home')
@@ -47,7 +48,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
     setUser(currentUser)
   }
 
-  const primaryCard = cards?.[0]
+  const primaryCard = cards?.find(card => card.isPrimary) || cards?.[0]
 
   if (!user) {
     return (
@@ -233,6 +234,13 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
       {view === 'income' && <IncomeHistory onBack={() => setView('home')} userId={user.id} />}
       {view === 'payments' && <PaymentsHistory onBack={() => setView('home')} userId={user.id} />}
+      {view === 'cards' && (
+        <CardManagement 
+          onBack={() => setView('home')} 
+          userId={user.id}
+          onAddCard={() => setShowAddCard(true)}
+        />
+      )}
       
       {view === 'profile' && (
         <div className="max-w-md mx-auto pb-24 pt-8 px-6">
@@ -259,11 +267,16 @@ export function Dashboard({ onLogout }: DashboardProps) {
             <Card className="p-4 rounded-2xl space-y-3">
               <Button 
                 variant="ghost" 
-                className="w-full justify-start text-left"
-                onClick={() => setShowAddCard(true)}
+                className="w-full justify-start text-left h-auto py-3"
+                onClick={() => setView('cards')}
               >
                 <CurrencyCircleDollar size={24} className="mr-3" />
-                Manage Cards
+                <div>
+                  <p className="font-semibold">Manage Cards</p>
+                  <p className="text-xs text-muted-foreground">
+                    {cards && cards.length > 0 ? `${cards.length} card${cards.length > 1 ? 's' : ''} linked` : 'No cards linked'}
+                  </p>
+                </div>
               </Button>
               <Button 
                 variant="ghost" 
