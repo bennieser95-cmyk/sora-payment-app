@@ -19,9 +19,10 @@ interface AddCardDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   userId: string
+  onCardLinked?: (card: CardType) => void
 }
 
-export function AddCardDialog({ open, onOpenChange, userId }: AddCardDialogProps) {
+export function AddCardDialog({ open, onOpenChange, userId, onCardLinked }: AddCardDialogProps) {
   const [cards, setCards] = useKV<CardType[]>(`cards_${userId}`, [])
   const [cardType, setCardType] = useState<'visa' | 'mastercard' | 'amex' | 'discover'>('visa')
   const [cardNumber, setCardNumber] = useState('')
@@ -87,6 +88,7 @@ export function AddCardDialog({ open, onOpenChange, userId }: AddCardDialogProps
 
     setCards((current) => [...(current || []), newCard])
     toast.success('Card linked successfully!')
+    onCardLinked?.(newCard)
     
     setCardNumber('')
     setCardholderName('')

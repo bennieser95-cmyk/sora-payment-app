@@ -4,18 +4,18 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { 
-  House, 
-  PaperPlaneTilt, 
-  DownloadSimple, 
-  Wallet, 
+import {
+  House,
+  PaperPlaneTilt,
+  DownloadSimple,
+  Wallet,
   DotsThree,
   ChartLine,
   ClockCounterClockwise,
   User,
   CaretRight,
   Briefcase,
-  CurrencyCircleDollar
+  CurrencyCircleDollar,
 } from '@phosphor-icons/react'
 import { authService } from '@/lib/auth'
 import { User as UserType, Card as CardType, Transaction, Contact } from '@/lib/types'
@@ -31,32 +31,50 @@ interface DashboardProps {
 
 type View = 'home' | 'income' | 'payments' | 'profile' | 'cards'
 
-export function Dashboard({ onLogout }: DashboardProps) {
+interface DashboardContentProps {
+  user: UserType
+  onLogout: () => void
+}
+
+function DashboardContent({ user, onLogout }: DashboardContentProps) {
   const [view, setView] = useState<View>('home')
-  const [user, setUser] = useState<UserType | null>(null)
-  const [cards] = useKV<CardType[]>(`cards_${user?.id}`, [])
-  const [transactions] = useKV<Transaction[]>(`transactions_${user?.id}`, [])
-  const [contacts] = useKV<Contact[]>(`contacts_${user?.id}`, [])
+  const [cards] = useKV<CardType[]>(`cards_${user.id}`, [])
+  const [transactions] = useKV<Transaction[]>(`transactions_${user.id}`, [])
+  const [contacts] = useKV<Contact[]>(`contacts_${user.id}`, [])
   const [showAddCard, setShowAddCard] = useState(false)
+  const [linkedCardPreview, setLinkedCardPreview] = useState<CardType | null>(null)
 
-  useEffect(() => {
-    loadUser()
-  }, [])
-
-  const loadUser = async () => {
-    const currentUser = await authService.getCurrentUser()
-    setUser(currentUser)
+  const cardPreviewStyles: Record<CardType['cardType'], { bg: string; label: string; text: string }> = {
+    visa: {
+      bg: 'bg-gradient-to-br from-blue-700 to-blue-950',
+      label: 'VISA',
+      text: 'text-white',
+    },
+    mastercard: {
+      bg: 'bg-gradient-to-br from-zinc-800 to-black',
+      label: 'Mastercard',
+      text: 'text-white',
+    },
+    amex: {
+      bg: 'bg-gradient-to-br from-sky-500 to-blue-700',
+      label: 'AMERICAN EXPRESS',
+      text: 'text-white',
+    },
+    discover: {
+      bg: 'bg-gradient-to-br from-zinc-100 to-zinc-300',
+      label: 'DISCOVER',
+      text: 'text-zinc-900',
+    },
   }
 
   const primaryCard = cards?.find(card => card.isPrimary) || cards?.[0]
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    )
-  }
+  // Clear preview when cards are loaded from KV (the saved card will be shown)
+  useEffect(() => {
+    if (cards && cards.length > 0) {
+      setLinkedCardPreview(null)
+    }
+  }, [cards])
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,7 +89,10 @@ export function Dashboard({ onLogout }: DashboardProps) {
               <div className="flex items-center gap-3">
                 <Avatar className="w-12 h-12">
                   <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                    {user.name.split(' ').map(n => n[0]).join('')}
+                    {user.name
+                      .split(' ')
+                      .map(n => n[0])
+                      .join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -93,27 +114,66 @@ export function Dashboard({ onLogout }: DashboardProps) {
               <Card className="bg-primary text-primary-foreground p-6 rounded-3xl border-0 shadow-lg relative overflow-hidden">
                 <div className="absolute top-4 right-4 w-12 h-12 bg-white/10 rounded-lg"></div>
                 <div className="absolute top-8 right-8 w-16 h-16 bg-white/5 rounded-lg"></div>
-                
+
                 <div className="relative z-10">
                   <p className="text-sm opacity-80 mb-1">Available Balance</p>
                   <h3 className="text-4xl font-display font-bold tabular-nums mb-4">
-                    ${primaryCard.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${primaryCard.balance.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </h3>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold tracking-wider">
-                      •••• {primaryCard.lastFour}
-                    </p>
+                    <p className="text-sm font-semibold tracking-wider">•••• {primaryCard.lastFour}</p>
                     <p className="text-sm opacity-80">
                       EX {primaryCard.expiryMonth}/{primaryCard.expiryYear.slice(-2)}
                     </p>
                   </div>
                   <div className="absolute top-4 right-4">
-                    <div className="text-xs font-bold tracking-widest">{primaryCard.cardType.toUpperCase()}</div>
+                    <div className="text-xs font-bold tracking-widest">
+                      {primaryCard.cardType.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ) : linkedCardPreview ? (
+              <Card className={`p-6 rounded-3xl relative overflow-hidden ${linkedCardPreview.isPrimary ? 'bg-primary text-primary-foreground border-0 shadow-lg' : 'bg-card'}`}>
+                <div className="relative z-10 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold tracking-widest opacity-80">{linkedCardPreview.cardType.toUpperCase()}</span>
+                        {linkedCardPreview.isPrimary && (
+                          <div className="rounded-full px-2 py-0 bg-secondary text-secondary-foreground text-xs">Primary</div>
+                        )}
+                      </div>
+                      <p className="text-sm font-semibold tracking-wider">•••• {linkedCardPreview.lastFour}</p>
+                    </div>
+                    <p className="text-xs">{linkedCardPreview.expiryMonth}/{linkedCardPreview.expiryYear}</p>
+                  </div>
+
+                  <div className="absolute top-4 right-4 w-1/3 max-w-[160px] min-w-[100px] rounded-lg shadow-md overflow-hidden">
+                    <div className={`${cardPreviewStyles[linkedCardPreview.cardType].bg} relative w-full`}>
+                      <div className="pb-[62%]" />
+                      <div className="absolute inset-0 flex items-end justify-between p-2">
+                        <div className="flex items-center">
+                          {linkedCardPreview.cardType === 'mastercard' ? (
+                            <>
+                              <span className="h-4 w-4 rounded-full bg-red-600" />
+                              <span className="-ml-1 h-4 w-4 rounded-full bg-amber-500/90" />
+                            </>
+                          ) : (
+                            <span className="h-3 w-5 rounded-sm bg-white/30" />
+                          )}
+                        </div>
+                        <span className={`text-[9px] leading-none font-bold tracking-wide ${cardPreviewStyles[linkedCardPreview.cardType].text}`}>{cardPreviewStyles[linkedCardPreview.cardType].label}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </Card>
             ) : (
-              <Card 
+              <Card
                 className="bg-muted p-6 rounded-3xl border-2 border-dashed border-border cursor-pointer hover:bg-muted/60 transition-colors"
                 onClick={() => setShowAddCard(true)}
               >
@@ -202,9 +262,11 @@ export function Dashboard({ onLogout }: DashboardProps) {
                       {transactions.slice(0, 5).map(transaction => (
                         <div key={transaction.id} className="flex items-center justify-between py-2">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              transaction.type === 'income' ? 'bg-mint-light' : 'bg-destructive/10'
-                            }`}>
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                transaction.type === 'income' ? 'bg-mint-light' : 'bg-destructive/10'
+                              }`}
+                            >
                               <Briefcase size={20} weight="fill" />
                             </div>
                             <div>
@@ -212,9 +274,11 @@ export function Dashboard({ onLogout }: DashboardProps) {
                               <p className="text-xs text-muted-foreground">{transaction.category}</p>
                             </div>
                           </div>
-                          <p className={`font-semibold tabular-nums ${
-                            transaction.type === 'income' ? 'text-foreground' : 'text-destructive'
-                          }`}>
+                          <p
+                            className={`font-semibold tabular-nums ${
+                              transaction.type === 'income' ? 'text-foreground' : 'text-destructive'
+                            }`}
+                          >
                             {transaction.type === 'income' ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
                           </p>
                         </div>
@@ -235,13 +299,13 @@ export function Dashboard({ onLogout }: DashboardProps) {
       {view === 'income' && <IncomeHistory onBack={() => setView('home')} userId={user.id} />}
       {view === 'payments' && <PaymentsHistory onBack={() => setView('home')} userId={user.id} />}
       {view === 'cards' && (
-        <CardManagement 
-          onBack={() => setView('home')} 
+        <CardManagement
+          onBack={() => setView('home')}
           userId={user.id}
           onAddCard={() => setShowAddCard(true)}
         />
       )}
-      
+
       {view === 'profile' && (
         <div className="max-w-md mx-auto pb-24 pt-8 px-6">
           <div className="flex items-center justify-between mb-8">
@@ -250,12 +314,15 @@ export function Dashboard({ onLogout }: DashboardProps) {
               <CaretRight size={24} className="rotate-180" />
             </Button>
           </div>
-          
+
           <div className="space-y-6">
             <div className="flex flex-col items-center gap-4">
               <Avatar className="w-24 h-24">
                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
-                  {user.name.split(' ').map(n => n[0]).join('')}
+                  {user.name
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')}
                 </AvatarFallback>
               </Avatar>
               <div className="text-center">
@@ -265,8 +332,8 @@ export function Dashboard({ onLogout }: DashboardProps) {
             </div>
 
             <Card className="p-4 rounded-2xl space-y-3">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full justify-start text-left h-auto py-3"
                 onClick={() => setView('cards')}
               >
@@ -274,12 +341,14 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 <div>
                   <p className="font-semibold">Manage Cards</p>
                   <p className="text-xs text-muted-foreground">
-                    {cards && cards.length > 0 ? `${cards.length} card${cards.length > 1 ? 's' : ''} linked` : 'No cards linked'}
+                    {cards && cards.length > 0
+                      ? `${cards.length} card${cards.length > 1 ? 's' : ''} linked`
+                      : 'No cards linked'}
                   </p>
                 </div>
               </Button>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full justify-start text-left text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={onLogout}
               >
@@ -329,11 +398,35 @@ export function Dashboard({ onLogout }: DashboardProps) {
         </div>
       </div>
 
-      <AddCardDialog 
-        open={showAddCard} 
+      <AddCardDialog
+        open={showAddCard}
         onOpenChange={setShowAddCard}
         userId={user.id}
+        onCardLinked={(card) => setLinkedCardPreview(card)}
       />
     </div>
   )
+}
+
+export function Dashboard({ onLogout }: DashboardProps) {
+  const [user, setUser] = useState<UserType | null>(null)
+
+  useEffect(() => {
+    loadUser()
+  }, [])
+
+  const loadUser = async () => {
+    const currentUser = await authService.getCurrentUser()
+    setUser(currentUser)
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
+  return <DashboardContent key={user.id} user={user} onLogout={onLogout} />
 }

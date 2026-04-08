@@ -24,6 +24,29 @@ interface CardManagementProps {
   onAddCard: () => void
 }
 
+const cardPreviewStyles: Record<CardType['cardType'], { bg: string; label: string; text: string }> = {
+  visa: {
+    bg: 'bg-gradient-to-br from-blue-700 to-blue-950',
+    label: 'VISA',
+    text: 'text-white',
+  },
+  mastercard: {
+    bg: 'bg-gradient-to-br from-zinc-800 to-black',
+    label: 'Mastercard',
+    text: 'text-white',
+  },
+  amex: {
+    bg: 'bg-gradient-to-br from-sky-500 to-blue-700',
+    label: 'AMERICAN EXPRESS',
+    text: 'text-white',
+  },
+  discover: {
+    bg: 'bg-gradient-to-br from-zinc-100 to-zinc-300',
+    label: 'DISCOVER',
+    text: 'text-zinc-900',
+  },
+}
+
 export function CardManagement({ onBack, userId, onAddCard }: CardManagementProps) {
   const [cards, setCards] = useKV<CardType[]>(`cards_${userId}`, [])
   const [cardToDelete, setCardToDelete] = useState<string | null>(null)
@@ -67,6 +90,36 @@ export function CardManagement({ onBack, userId, onAddCard }: CardManagementProp
     }
   }
 
+  const renderCardPreview = (type: CardType['cardType'], isPrimary?: boolean) => {
+    const preview = cardPreviewStyles[type]
+
+    return (
+      <div
+        className={`absolute top-4 right-4 w-1/3 max-w-[160px] min-w-[100px] rounded-lg shadow-md overflow-hidden ${
+          isPrimary ? 'opacity-95' : 'opacity-80'
+        }`}
+        aria-hidden="true"
+      >
+        <div className={`${preview.bg} relative w-full`}>
+          <div className="pb-[62%]" />
+          <div className="absolute inset-0 flex items-end justify-between p-2">
+            {type === 'mastercard' ? (
+              <div className="flex items-center">
+                <span className="h-4 w-4 rounded-full bg-red-600" />
+                <span className="-ml-1 h-4 w-4 rounded-full bg-amber-500/90" />
+              </div>
+            ) : (
+              <span className="h-3 w-5 rounded-sm bg-white/30" />
+            )}
+            <span className={`text-[9px] leading-none font-bold tracking-wide ${preview.text}`}>
+              {preview.label}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-md mx-auto px-6 pt-8">
@@ -98,13 +151,7 @@ export function CardManagement({ onBack, userId, onAddCard }: CardManagementProp
                       ? 'bg-primary text-primary-foreground border-0 shadow-lg' 
                       : 'bg-card hover:shadow-md transition-shadow'
                   }`}>
-                    {card.isPrimary && (
-                      <div className="absolute top-4 right-4 w-12 h-12 bg-white/10 rounded-lg"></div>
-                    )}
-                    {card.isPrimary && (
-                      <div className="absolute top-8 right-8 w-16 h-16 bg-white/5 rounded-lg"></div>
-                    )}
-                    
+                    {renderCardPreview(card.cardType, card.isPrimary)}
                     <div className="relative z-10 space-y-4">
                       <div className="flex items-start justify-between">
                         <div>
