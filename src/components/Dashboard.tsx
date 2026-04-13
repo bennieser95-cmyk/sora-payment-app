@@ -16,6 +16,7 @@ import {
   CaretRight,
   Briefcase,
   CurrencyCircleDollar,
+  ChartPieSlice,
 } from '@phosphor-icons/react'
 import { authService } from '@/lib/auth'
 import { User as UserType, Card as CardType, Transaction, Contact } from '@/lib/types'
@@ -24,12 +25,13 @@ import { AddCardDialog } from './AddCardDialog'
 import { IncomeHistory } from './IncomeHistory'
 import { PaymentsHistory } from './PaymentsHistory'
 import { CardManagement } from './CardManagement'
+import { Portfolio } from './Portfolio'
 
 interface DashboardProps {
   onLogout: () => void
 }
 
-type View = 'home' | 'income' | 'payments' | 'profile' | 'cards'
+type View = 'home' | 'income' | 'payments' | 'profile' | 'cards' | 'portfolio'
 
 interface DashboardContentProps {
   user: UserType
@@ -298,6 +300,7 @@ function DashboardContent({ user, onLogout }: DashboardContentProps) {
 
       {view === 'income' && <IncomeHistory onBack={() => setView('home')} userId={user.id} />}
       {view === 'payments' && <PaymentsHistory onBack={() => setView('home')} userId={user.id} />}
+      {view === 'portfolio' && <Portfolio onBack={() => setView('home')} userId={user.id} />}
       {view === 'cards' && (
         <CardManagement
           onBack={() => setView('home')}
@@ -385,6 +388,14 @@ function DashboardContent({ user, onLogout }: DashboardContentProps) {
               onClick={() => setView('payments')}
             >
               <ClockCounterClockwise size={24} weight={view === 'payments' ? 'fill' : 'regular'} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`rounded-full ${view === 'portfolio' ? 'bg-mint text-primary' : ''}`}
+              onClick={() => setView('portfolio')}
+            >
+              <ChartPieSlice size={24} weight={view === 'portfolio' ? 'fill' : 'regular'} />
             </Button>
             <Button
               variant="ghost"

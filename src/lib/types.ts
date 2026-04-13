@@ -36,6 +36,21 @@ export interface Contact {
   avatar: string
 }
 
+export type AssetCategory = 'crypto' | 'stock' | 'etf' | 'securities' | 'other'
+
+export interface PortfolioItem {
+  id: string
+  userId: string
+  name: string
+  ticker: string
+  category: AssetCategory
+  quantity: number
+  buyPrice: number
+  currentPrice: number
+  currency: string
+  color?: string
+}
+
 export interface AuthData {
   email: string
   password: string
