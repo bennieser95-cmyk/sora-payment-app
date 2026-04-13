@@ -77,11 +77,13 @@ export function CardCarousel({ userId, onAddCard }: CardCarouselProps) {
     }
   }, [emblaApi, onSelect])
 
-  // Scroll to primary card on initial load
+  // Scroll to primary card once when emblaApi first becomes ready.
+  // Intentionally excludes `cards` from deps to avoid interfering with
+  // manual user scrolling on subsequent card updates.
   useEffect(() => {
     if (!emblaApi || !cards || cards.length === 0) return
     const primaryIndex = cards.findIndex(c => c.isPrimary)
-    if (primaryIndex > 0) {
+    if (primaryIndex >= 0) {
       emblaApi.scrollTo(primaryIndex, true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
