@@ -24,6 +24,7 @@ import { AddCardDialog } from './AddCardDialog'
 import { IncomeHistory } from './IncomeHistory'
 import { PaymentsHistory } from './PaymentsHistory'
 import { CardManagement } from './CardManagement'
+import { CardCarousel } from './CardCarousel'
 
 interface DashboardProps {
   onLogout: () => void
@@ -38,43 +39,10 @@ interface DashboardContentProps {
 
 function DashboardContent({ user, onLogout }: DashboardContentProps) {
   const [view, setView] = useState<View>('home')
-  const [cards] = useKV<CardType[]>(`cards_${user.id}`, [])
   const [transactions] = useKV<Transaction[]>(`transactions_${user.id}`, [])
   const [contacts] = useKV<Contact[]>(`contacts_${user.id}`, [])
+  const [cards] = useKV<CardType[]>(`cards_${user.id}`, [])
   const [showAddCard, setShowAddCard] = useState(false)
-  const [linkedCardPreview, setLinkedCardPreview] = useState<CardType | null>(null)
-
-  const cardPreviewStyles: Record<CardType['cardType'], { bg: string; label: string; text: string }> = {
-    visa: {
-      bg: 'bg-gradient-to-br from-blue-700 to-blue-950',
-      label: 'VISA',
-      text: 'text-white',
-    },
-    mastercard: {
-      bg: 'bg-gradient-to-br from-zinc-800 to-black',
-      label: 'Mastercard',
-      text: 'text-white',
-    },
-    amex: {
-      bg: 'bg-gradient-to-br from-sky-500 to-blue-700',
-      label: 'AMERICAN EXPRESS',
-      text: 'text-white',
-    },
-    discover: {
-      bg: 'bg-gradient-to-br from-zinc-100 to-zinc-300',
-      label: 'DISCOVER',
-      text: 'text-zinc-900',
-    },
-  }
-
-  const primaryCard = cards?.find(card => card.isPrimary) || cards?.[0]
-
-  // Clear preview when cards are loaded from KV (the saved card will be shown)
-  useEffect(() => {
-    if (cards && cards.length > 0) {
-      setLinkedCardPreview(null)
-    }
-  }, [cards])
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,80 +78,7 @@ function DashboardContent({ user, onLogout }: DashboardContentProps) {
               </Button>
             </div>
 
-            {primaryCard ? (
-              <Card className="bg-primary text-primary-foreground p-6 rounded-3xl border-0 shadow-lg relative overflow-hidden">
-                <div className="absolute top-4 right-4 w-12 h-12 bg-white/10 rounded-lg"></div>
-                <div className="absolute top-8 right-8 w-16 h-16 bg-white/5 rounded-lg"></div>
-
-                <div className="relative z-10">
-                  <p className="text-sm opacity-80 mb-1">Available Balance</p>
-                  <h3 className="text-4xl font-display font-bold tabular-nums mb-4">
-                    ${primaryCard.balance.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold tracking-wider">•••• {primaryCard.lastFour}</p>
-                    <p className="text-sm opacity-80">
-                      EX {primaryCard.expiryMonth}/{primaryCard.expiryYear.slice(-2)}
-                    </p>
-                  </div>
-                  <div className="absolute top-4 right-4">
-                    <div className="text-xs font-bold tracking-widest">
-                      {primaryCard.cardType.toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ) : linkedCardPreview ? (
-              <Card className={`p-6 rounded-3xl relative overflow-hidden ${linkedCardPreview.isPrimary ? 'bg-primary text-primary-foreground border-0 shadow-lg' : 'bg-card'}`}>
-                <div className="relative z-10 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold tracking-widest opacity-80">{linkedCardPreview.cardType.toUpperCase()}</span>
-                        {linkedCardPreview.isPrimary && (
-                          <div className="rounded-full px-2 py-0 bg-secondary text-secondary-foreground text-xs">Primary</div>
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold tracking-wider">•••• {linkedCardPreview.lastFour}</p>
-                    </div>
-                    <p className="text-xs">{linkedCardPreview.expiryMonth}/{linkedCardPreview.expiryYear}</p>
-                  </div>
-
-                  <div className="absolute top-4 right-4 w-1/3 max-w-[160px] min-w-[100px] rounded-lg shadow-md overflow-hidden">
-                    <div className={`${cardPreviewStyles[linkedCardPreview.cardType].bg} relative w-full`}>
-                      <div className="pb-[62%]" />
-                      <div className="absolute inset-0 flex items-end justify-between p-2">
-                        <div className="flex items-center">
-                          {linkedCardPreview.cardType === 'mastercard' ? (
-                            <>
-                              <span className="h-4 w-4 rounded-full bg-red-600" />
-                              <span className="-ml-1 h-4 w-4 rounded-full bg-amber-500/90" />
-                            </>
-                          ) : (
-                            <span className="h-3 w-5 rounded-sm bg-white/30" />
-                          )}
-                        </div>
-                        <span className={`text-[9px] leading-none font-bold tracking-wide ${cardPreviewStyles[linkedCardPreview.cardType].text}`}>{cardPreviewStyles[linkedCardPreview.cardType].label}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              <Card
-                className="bg-muted p-6 rounded-3xl border-2 border-dashed border-border cursor-pointer hover:bg-muted/60 transition-colors"
-                onClick={() => setShowAddCard(true)}
-              >
-                <div className="text-center py-8">
-                  <CurrencyCircleDollar size={48} className="mx-auto mb-3 text-muted-foreground" />
-                  <p className="font-semibold mb-1">No Card Linked</p>
-                  <p className="text-sm text-muted-foreground">Tap to add your first card</p>
-                </div>
-              </Card>
-            )}
+            <CardCarousel userId={user.id} onAddCard={() => setShowAddCard(true)} />
 
             <div className="grid grid-cols-4 gap-3">
               <Button
@@ -402,7 +297,6 @@ function DashboardContent({ user, onLogout }: DashboardContentProps) {
         open={showAddCard}
         onOpenChange={setShowAddCard}
         userId={user.id}
-        onCardLinked={(card) => setLinkedCardPreview(card)}
       />
     </div>
   )
