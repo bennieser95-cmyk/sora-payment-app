@@ -67,7 +67,7 @@ function PortfolioItemRow({ item }: { item: PortfolioItem }) {
   const value = item.quantity * item.currentPrice
   const cost = item.quantity * item.buyPrice
   const gain = value - cost
-  const gainPct = ((gain / cost) * 100).toFixed(2)
+  const gainPct = cost > 0 ? ((gain / cost) * 100).toFixed(2) : '0.00'
   const isPositive = gain >= 0
   const colors = CATEGORY_COLORS[item.category]
 
@@ -125,7 +125,7 @@ export function Portfolio({ onBack, userId }: PortfolioProps) {
     cat === 'all' ? (items ?? []) : (items ?? []).filter(i => i.category === cat)
 
   function handleAdd() {
-    if (!form.name || !form.ticker || form.quantity <= 0) return
+    if (!form.name || !form.ticker || form.quantity <= 0 || form.buyPrice <= 0 || form.currentPrice <= 0) return
     const newItem: PortfolioItem = { ...form, id: uuidv4(), userId }
     setItems([...(items ?? []), newItem])
     setForm(EMPTY_FORM)
@@ -308,7 +308,7 @@ export function Portfolio({ onBack, userId }: PortfolioProps) {
                   placeholder="0"
                   min="0"
                   value={form.quantity || ''}
-                  onChange={e => setForm(f => ({ ...f, quantity: parseFloat(e.target.value) || 0 }))}
+                  onChange={e => setForm(f => ({ ...f, quantity: Number.isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value) }))}
                 />
               </div>
               <div>
@@ -319,7 +319,7 @@ export function Portfolio({ onBack, userId }: PortfolioProps) {
                   placeholder="0.00"
                   min="0"
                   value={form.buyPrice || ''}
-                  onChange={e => setForm(f => ({ ...f, buyPrice: parseFloat(e.target.value) || 0 }))}
+                  onChange={e => setForm(f => ({ ...f, buyPrice: Number.isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value) }))}
                 />
               </div>
               <div>
@@ -330,7 +330,7 @@ export function Portfolio({ onBack, userId }: PortfolioProps) {
                   placeholder="0.00"
                   min="0"
                   value={form.currentPrice || ''}
-                  onChange={e => setForm(f => ({ ...f, currentPrice: parseFloat(e.target.value) || 0 }))}
+                  onChange={e => setForm(f => ({ ...f, currentPrice: Number.isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value) }))}
                 />
               </div>
               <div>
@@ -351,7 +351,7 @@ export function Portfolio({ onBack, userId }: PortfolioProps) {
             <Button
               className="w-full h-12 rounded-full font-semibold mt-2"
               onClick={handleAdd}
-              disabled={!form.name || !form.ticker || form.quantity <= 0}
+              disabled={!form.name || !form.ticker || form.quantity <= 0 || form.buyPrice <= 0 || form.currentPrice <= 0}
             >
               Hinzufügen
             </Button>
