@@ -9,13 +9,13 @@ import {
   PaperPlaneTilt,
   DownloadSimple,
   Wallet,
-  DotsThree,
   ChartLine,
   ClockCounterClockwise,
   User,
   CaretRight,
   Briefcase,
   CurrencyCircleDollar,
+  TrendUp,
 } from '@phosphor-icons/react'
 import { authService } from '@/lib/auth'
 import { User as UserType, Card as CardType, Transaction, Contact } from '@/lib/types'
@@ -25,12 +25,13 @@ import { IncomeHistory } from './IncomeHistory'
 import { PaymentsHistory } from './PaymentsHistory'
 import { CardManagement } from './CardManagement'
 import { CardCarousel } from './CardCarousel'
+import { Invest } from './Invest'
 
 interface DashboardProps {
   onLogout: () => void
 }
 
-type View = 'home' | 'income' | 'payments' | 'profile' | 'cards'
+type View = 'home' | 'income' | 'payments' | 'profile' | 'cards' | 'invest'
 
 interface DashboardContentProps {
   user: UserType
@@ -114,11 +115,12 @@ function DashboardContent({ user, onLogout }: DashboardContentProps) {
               <Button
                 variant="ghost"
                 className="flex-col h-auto py-4 px-2 gap-2 rounded-2xl bg-peach-light/50 hover:bg-peach-light/70"
+                onClick={() => setView('invest')}
               >
                 <div className="w-12 h-12 rounded-full bg-peach flex items-center justify-center">
-                  <DotsThree size={24} weight="bold" className="text-primary" />
+                  <TrendUp size={24} weight="fill" className="text-primary" />
                 </div>
-                <span className="text-xs font-medium">More</span>
+                <span className="text-xs font-medium">Invest</span>
               </Button>
             </div>
 
@@ -193,6 +195,7 @@ function DashboardContent({ user, onLogout }: DashboardContentProps) {
 
       {view === 'income' && <IncomeHistory onBack={() => setView('home')} userId={user.id} />}
       {view === 'payments' && <PaymentsHistory onBack={() => setView('home')} userId={user.id} />}
+      {view === 'invest' && <Invest onBack={() => setView('home')} userId={user.id} />}
       {view === 'cards' && (
         <CardManagement
           onBack={() => setView('home')}
@@ -272,6 +275,14 @@ function DashboardContent({ user, onLogout }: DashboardContentProps) {
               onClick={() => setView('income')}
             >
               <ChartLine size={24} weight={view === 'income' ? 'fill' : 'regular'} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`rounded-full ${view === 'invest' ? 'bg-mint text-primary' : ''}`}
+              onClick={() => setView('invest')}
+            >
+              <TrendUp size={24} weight={view === 'invest' ? 'fill' : 'regular'} />
             </Button>
             <Button
               variant="ghost"
